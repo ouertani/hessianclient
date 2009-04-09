@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.jtunisie.osgi.hessian</groupId>
-  <artifactId>client</artifactId> 
-  <version>1.0</version>
-  <name>client.extender</name>
-  <packaging>bundle</packaging>
-  <dependencies>
-       <dependency>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.jtunisie.osgi.hessian</groupId>
+    <artifactId>client</artifactId>
+    <version>1.0</version>
+    <name>client.extender</name>
+    <packaging>bundle</packaging>
+    <dependencies>
+        <dependency>
             <groupId>com.caucho</groupId>
             <artifactId>hessian</artifactId>
             <version>3.1.5</version>
@@ -17,12 +17,9 @@
             <artifactId>org.osgi</artifactId>
             <version>3.0</version>
         </dependency>
-       <!--  
+    </dependencies>
 
-        -->
-  </dependencies>
-
-      <build>
+    <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -40,7 +37,7 @@
                     <instructions>
                         <Export-Package>com.caucho.hessian.*</Export-Package>
                         <Private-Package>com.jtunisie.osgi.hessian.client.*,com.caucho.*</Private-Package>
-                        <Bundle-Activator>com.jtunisie.osgi.hessian.client.DraftExtender</Bundle-Activator>
+                        <Bundle-Activator>com.jtunisie.osgi.hessian.client.Activator</Bundle-Activator>
                         <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>

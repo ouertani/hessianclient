@@ -25,7 +25,8 @@
                 <configuration>
                     <instructions>                      
                         <Private-Package>com.jtunisie.osgi.hessian.client.test.*</Private-Package>
-                        <Bundle-Activator>com.jtunisie.osgi.hessian.client.test.Activator</Bundle-Activator>                     
+                        <Bundle-Activator>com.jtunisie.osgi.hessian.client.test.Activator</Bundle-Activator>
+                        <Hessian-File>OSGI-INF/remote-service/remote-services.xml</Hessian-File>
                     </instructions>
                 </configuration>
             </plugin>

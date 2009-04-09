@@ -7,4 +7,5 @@
     <property name="osgi.remote.configuration.type">pojo</property>
     <property name="osgi.remote.configuration.pojo.address">http://localhost:8082/jtunisie</property>
   </service-description>
+  
 </service-descriptions>
