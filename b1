@@ -1,0 +1,437 @@
+The next osgi release (4.2) contains many enhancements such service registry hooks, transactions and distribution. Apache CXF(http://cxf.apache.org/dosgi-releases.html) and eclipse riena(http://www.eclipse.org/proposals/riena) are the pionner to use this future to enable distribution inside osgi.
+
+Newton( http://newton.codecauldron.org/site/index.html) as an SCA implementation and others frameworks used yet remoting inside osgi current version (4.1). 
+
+In my old post(----------------) I presented how to register hessian web service using declarative way by chaining three extenders. Now, I will try to present how to get this reference from remote client bundle using SCA declaration model adopted in 4.2 release.
+
+To do this work, I used :
+1- Dynamic Proxys
+2- DynamicImport-Package
+3- Extender bundle listner
+4- Stax XML parser 
+5- Hessian client.
+
+
+Starting by the end :
+
+I - Hessian client 
+Client bundle contains one activator and tracking the reference for com.jtunisie.osgi.hessian.IService.
+
+package com.jtunisie.osgi.hessian.client.test;
+
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+
+public class Activator implements BundleActivator {
+
+    private RemoteServieTracker remoteServiceTracker;
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        remoteServiceTracker = new RemoteServieTracker(context);
+        remoteServiceTracker.open();
+        String execute = remoteServiceTracker.execute();
+        System.out.println(execute);
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        if (remoteServiceTracker != null) {
+            remoteServiceTracker.close();
+        }
+    }
+}
+
+
+package com.jtunisie.osgi.hessian.client.test;
+
+import com.jtunisie.osgi.hessian.IService;
+import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
+
+
+public class RemoteServieTracker extends ServiceTracker implements IService {
+
+    public RemoteServieTracker(BundleContext context) {
+        super(context, IService.class.getName(), null);
+    }
+
+    @Override
+    public String execute() {
+        IService service = (IService) getService();
+        String execute = service.execute();        
+        return execute;
+    }
+}
+
+The requested service is not registred in the current registery to get it  :
+ 1 -Add remote-services.xml under the OSGI-INF/remote-service directory :
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service-descriptions xmlns="http://www.osgi.org/xmlns/sd/v1.0.0">
+  <service-description>
+    <provide interface="com.jtunisie.osgi.hessian.IService" />
+    <property name="osgi.remote.interfaces">*</property>
+    <property name="osgi.remote.configuration.type">pojo</property>
+    <property name="osgi.remote.configuration.pojo.address">http://localhost:8082/jtunisie</property>
+  </service-description>
+  
+</service-descriptions>
+ 2- Add to MANIFEST.MF file :  Hessian-File : OSGI-INF/remote-service/remote-services.xml
+
+
+we have finished our test client bundle. Let start our Extender. The idea is to register a proxy service that will hide remote access as may framework do.
+
+II- Stax Parser :
+I have used stax to parse remote-services.xml file :
+
+package com.jtunisie.osgi.hessian.client;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.XMLEvent;
+import org.osgi.framework.ServiceRegistration;
+
+/**
+ *
+ * @author slim
+ */
+public class Parser {
+
+    public static List<Pair> parseRemoteconfig(URL url) {
+
+       
+        // Create event reader
+        InputStream openStream = null;
+        try {
+            XMLInputFactory factory = XMLInputFactory.newInstance();
+            // Setup a new eventReader
+            openStream = url.openStream();
+
+            XMLEventReader eventReader = factory.createXMLEventReader(openStream);
+            QName name = new QName("name");
+            QName iname = new QName("interface");
+            List<Pair> remotes = null;
+            String remotInterface = "";
+            String remoteAdress = "";
+
+            while (eventReader.hasNext()) {
+                XMLEvent event = eventReader.nextEvent();
+
+
+
+                if (event.isStartElement()) {
+
+                    if (event.asStartElement().getName().getLocalPart().equals("service-descriptions")) {
+                        remotes = new ArrayList<Pair>();
+                    }
+                    if (event.asStartElement().getName().getLocalPart().equals("service-description")) {
+                    }
+                    if (event.asStartElement().getName().getLocalPart().equals("provide")) {
+                        Attribute attributeByName = event.asStartElement().getAttributeByName(iname);
+                        if (attributeByName != null) {
+                            remotInterface = attributeByName.getValue();
+                        }
+                    }
+                    if (event.asStartElement().getName().getLocalPart().equals("property")) {
+
+                        Attribute attributeByName = event.asStartElement().getAttributeByName(name);
+                        if (attributeByName != null && attributeByName.getValue().equals("osgi.remote.configuration.pojo.address")) {
+                            remoteAdress = eventReader.nextEvent().asCharacters().getData();
+                        }
+                    }
+
+
+                }
+                if (event.isEndElement()) {
+                    if (event.asEndElement().getName().getLocalPart().equals("service-descriptions")) {
+                        return remotes;
+                    }
+                    if (event.asEndElement().getName().getLocalPart().equals("service-description")) {
+                        Pair p = Pair.getInstence(remotInterface, remoteAdress);
+                        remotes.add(p);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (XMLStreamException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                openStream.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        throw new RuntimeException("Parse Exception");
+    }
+
+    public static class Pair {
+
+        private String remoteInterface;
+        private String remoteAdress;
+        private Class<?> clazz;
+        private ServiceRegistration serviceRegistration;
+
+        static Pair getInstence(String remotInterface, String remoteAdress) {
+            try {
+                return new Pair(remotInterface, remoteAdress);
+            } catch (ClassNotFoundException ex) {
+                ex.printStackTrace();
+                return null;
+            }
+        }
+
+        private Pair(String remotInterface, String remoteAdress) throws ClassNotFoundException {
+            this.remoteInterface = remotInterface;
+            this.remoteAdress = remoteAdress;
+            this.clazz = Class.forName(remotInterface);
+        }
+
+        public Class<?> getClazz() {
+            return clazz;
+        }
+
+        public String getRemoteInterface() {
+            return remoteInterface;
+        }
+
+        public String getRemoteAdress() {
+            return remoteAdress;
+        }
+
+        public ServiceRegistration getServiceRegistration() {
+            System.out.println("Service registred !!");
+            return serviceRegistration;
+        }
+
+        public void setServiceRegistration(ServiceRegistration serviceRegistration) {
+            this.serviceRegistration = serviceRegistration;
+        }
+    }
+}
+
+III- Extender bundle listener
+1- Listen to updated and installed bundle
+2- check MANIFEST.MF file
+3- Get the url and parse an XML resources
+4- Register a proxy service
+
+package com.jtunisie.osgi.hessian.client;
+
+import com.jtunisie.osgi.hessian.client.Parser.Pair;
+import java.net.URL;
+import java.util.Dictionary;
+import java.util.List;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.SynchronousBundleListener;
+import static org.osgi.framework.BundleEvent.*;
+
+/**
+ *
+ * @author slim
+ */
+public class BundleListner implements SynchronousBundleListener {
+
+    private static final String HESSIAN_HEADER = "Hessian-File";
+    private final BundleContext context;
+
+    public BundleListner(BundleContext context) {
+        this.context = context;
+    }
+
+    @Override
+    public void bundleChanged(BundleEvent event) {   
+        if (event.getType() == UPDATED || event.getType() == STARTED) {
+
+            try {             
+                addBundle(event.getBundle());
+            } catch (ClassNotFoundException ex) {
+               ex.printStackTrace();
+            }
+        }
+        if (BundleEvent.STOPPED == event.getType()) {
+            removeBundle(event.getBundle());
+        }
+    }
+
+    private void addBundle(Bundle bundle) throws ClassNotFoundException {
+        @SuppressWarnings("unchecked")
+        Dictionary<String, String> headers = bundle.getHeaders();
+        String indexPath = headers.get(HESSIAN_HEADER);
+        
+        if (indexPath == null) {
+            return;
+        }      
+        URL resource = bundle.getResource(indexPath);
+        if (resource == null) {
+            return;
+        }
+        
+        List<Pair> remotes = Parser.parseRemoteconfig(resource);
+        if (remotes != null) {
+            for (Pair pair : remotes) {          
+                pair.setServiceRegistration(new ClientExtender().registerService(context, pair));
+            }
+        }
+    }
+
+    private void removeBundle(Bundle bundle) {
+        // TODO
+    }
+}
+IV-DynamicImport-Package :
+
+As this extender will manipulate unkown class and interfaces adding enable DynamicImport-Package to all packages is the must. To do add <DynamicImport-Package>*</DynamicImport-Package> to your pom file or directly to MANIFEST.MF
+
+V- Dynamic Proxys
+
+1 -I created a geniric proxy class GenericClientProxy to forward calls to remote implementation according to requested service and destination
+
+package com.jtunisie.osgi.hessian.client;
+
+import com.caucho.hessian.client.HessianProxyFactory;
+import com.jtunisie.osgi.hessian.client.Parser.Pair;
+import java.io.Serializable;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+/**
+ *
+ * @author slim
+ */
+public class GenericClientProxy implements InvocationHandler, Serializable {
+
+    private Pair pair;
+
+    public GenericClientProxy(Pair pair) throws ClassNotFoundException {
+        this.pair = pair;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        HessianProxyFactory factory = new HessianProxyFactory();
+        Serializable service = (Serializable) factory.create(pair.getClazz(), pair.getRemoteAdress());
+        return method.invoke(service, args);
+    }
+}
+
+2- ClientExtender class will register this proxy inside local osgi as if it is present.
+
+package com.jtunisie.osgi.hessian.client;
+
+import com.jtunisie.osgi.hessian.client.Parser.Pair;
+import java.lang.reflect.Proxy;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
+/**
+ *
+ * @author slim
+ */
+public class ClientExtender {
+
+    ServiceRegistration registerService(BundleContext context, Pair pair) throws ClassNotFoundException {
+        String _interface = pair.getRemoteInterface();
+        Class[] interfaces = {pair.getClazz()};
+        GenericClientProxy clientProxy = new GenericClientProxy(pair);
+        Object newProxyInstance = Proxy.newProxyInstance(this.getClass().getClassLoader(), interfaces, clientProxy);
+        return context.registerService(_interface, newProxyInstance, null);
+    }
+
+    void unregisterService(BundleContext context, Pair pair) {
+        //TODO
+    }
+}
+
+
+3- Activator class will contains only bundle listner registration
+
+package com.jtunisie.osgi.hessian.client;
+
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+
+/**
+ *
+ * @author slim
+ */
+public class Activator implements BundleActivator {
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        context.addBundleListener(new BundleListner(context));
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        //TODO
+    }
+}
+
+
+V- Execution
+if we run extender bundle and a test client we will see that our extender well register remote service inside local register :
+
+osgi> b <extender-id>
+........
+ Id=41, Status=ACTIVE      Data Root=/home/slim/work/svn/hessianextender-read-only/env.client/configuration/org.eclipse.osgi/bundles/41/data
+  Registered Services
+    {com.jtunisie.osgi.hessian.IService}={service.id=47}
+  No services in use.
+  Exported packages
+    com.caucho.hessian.security; version="0.0.0"[exported]
+    com.caucho.hessian.io; version="0.0.0"[exported]
+    com.caucho.hessian.client; version="0.0.0"[exported]
+    com.caucho.hessian.server; version="0.0.0"[exported]
+    com.caucho.hessian.jmx; version="0.0.0"[exported]
+    com.caucho.hessian.mux; version="0.0.0"[exported]
+    com.caucho.hessian.util; version="0.0.0"[exported]
+    com.caucho.hessian.micro; version="0.0.0"[exported]
+    com.caucho.hessian; version="0.0.0"[exported]
+    com.caucho.hessian.test; version="0.0.0"[exported]
+  Imported packages
+    javax.crypto; version="0.0.0"<System Bundle [0]>
+    javax.management; version="0.0.0"<System Bundle [0]>
+    javax.naming; version="0.0.0"<System Bundle [0]>
+    javax.naming.spi; version="0.0.0"<System Bundle [0]>
+    javax.servlet; version="2.5.0"<initial@reference:file:plugins/web/pax-web-service-0.4.1.jar/ [37]>
+    javax.servlet.http; version="2.5.0"<initial@reference:file:plugins/web/pax-web-service-0.4.1.jar/ [37]>
+    javax.xml.namespace; version="0.0.0"<System Bundle [0]>
+    javax.xml.stream; version="0.0.0"<System Bundle [0]>
+    javax.xml.stream.events; version="0.0.0"<System Bundle [0]>
+    org.osgi.framework; version="1.4.0"<System Bundle [0]>
+    org.w3c.dom; version="0.0.0"<System Bundle [0]>
+  No fragment bundles
+  Named class space
+    com.jtunisie.osgi.hessian.client; bundle-version="1.0.0"[provided]
+  No required bundles
+
+
+VI - Conclusion
+
+Using extenders in osgi is a powerful tool. this api outline using 
+ Extender pattern.
+ Bundle listner.
+ Dynamic proxy for remoting.
+ Stax XML parsing
+ Hessian service client.
+
+It's not for production :) but as didactic use. if you want powerful api check eclipse riena.
+
