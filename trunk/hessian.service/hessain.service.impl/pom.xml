@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <parent>
+        <groupId>com.jtunisie.osgi.hessian</groupId>
+        <artifactId>hessian</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.jtunisie.osgi.hessain</groupId>
+    <artifactId>hessain.service.impl</artifactId>
+    <name>hessain.service.impl</name>
+    <version>1.0-SNAPSHOT</version>
+    <url>http://maven.apache.org</url>
+    <packaging>bundle</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.jtunisie.osgi.hessian</groupId>
+            <artifactId>hessian.service.api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.caucho</groupId>
+            <artifactId>hessian</artifactId>
+            <version>3.1.5</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>com.jtunisie.osgi.hessian.*,com.jtunisie.osgi.hessian.exceptions.*</Export-Package>
+                        <Private-Package>com.jtunisie.osgi.hessian.impl.*</Private-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ================================================ -->
+  <!--            Repository Configuration              -->
+  <!-- ================================================ -->
+    <repositories>
+        <repository>
+            <id>apache.m2.incubator</id>
+            <name>Apache M2 Incubator Repository</name>
+            <url>http://people.apache.org/repo/m2-incubating-repository/</url>
+        </repository>
+        <repository>
+            <id>eclipse-repository</id>
+            <name>Eclipse Repository</name>
+            <url>http://repo1.maven.org/eclipse/</url>
+        </repository>
+        <repository>
+            <id>safehaus-repository</id>
+            <name>Safehaus Repository</name>
+            <url>http://m2.safehaus.org</url>
+        </repository>
+        <repository>
+            <id>spring-ext</id>
+            <name>Spring External Dependencies Repository</name>
+            <url>https://springframework.svn.sourceforge.net/svnroot/springframework/repos/repo-ext/</url>
+        </repository>
+        <repository>
+            <id>i21-s3-osgi-repo</id>
+            <name>i21 osgi artifacts repo</name>
+            <snapshots>
+            </snapshots>
+            <url>http://s3.amazonaws.com/maven.springframework.org/osgi</url>
+        </repository>
+        <repository>
+            <id>i21-s3-maven-repo</id>
+            <name>i21 S3 milestone repo</name>
+            <url>http://s3.amazonaws.com/maven.springframework.org/milestone</url>
+        </repository>
+
+    <!--
+
+    Spring-DM snapshot repository - disabled by default
+
+    <repository>
+	 <snapshots><enabled>true</enabled></snapshots>
+	  <id>springframework.org</id>
+      <name>Springframework Maven SNAPSHOT Repository</name>
+      <url>http://s3.amazonaws.com/maven.springframework.org/snapshot</url>
+	</repository>
+	-->
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven-repo</id>
+            <name>maven repo</name>
+            <url>http://repo1.maven.org/maven2/</url>
+        </pluginRepository>
+    </pluginRepositories>
+</project>

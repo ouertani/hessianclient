@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Export-Package: com.jtunisie.osgi.hessian,com.jtunisie.osgi.hessian.ex
+ ceptions
+Private-Package: com.jtunisie.osgi.hessian,
+Built-By: slim
+Tool: Bnd-0.0.311
+Bundle-Name: hessian.service.api
+Created-By: Apache Maven Bundle Plugin
+Bundle-Version: 1.0.0.SNAPSHOT
+Build-Jdk: 1.6.0_12
+Bnd-LastModified: 1239049249613
+Bundle-ManifestVersion: 2
+Import-Package: com.jtunisie.osgi.hessian,com.jtunisie.osgi.hessian.ex
+ ceptions
+Bundle-SymbolicName: com.jtunisie.osgi.hessian.service.api
+

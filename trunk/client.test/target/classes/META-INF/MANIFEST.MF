@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Export-Package: com.jtunisie.osgi.hessian.client.test;uses:="org.osgi.
+ framework,com.jtunisie.osgi.hessian,org.osgi.util.tracker"
+Private-Package: com.jtunisie.osgi.hessian.client.test.*
+Built-By: slim
+Tool: Bnd-0.0.311
+Bundle-Name: client.test
+Created-By: Apache Maven Bundle Plugin
+Build-Jdk: 1.6.0_12
+Bundle-Version: 1.0.0.SNAPSHOT
+Bnd-LastModified: 1239051623174
+Bundle-ManifestVersion: 2
+Bundle-Activator: com.jtunisie.osgi.hessian.client.test.Activator
+Import-Package: com.jtunisie.osgi.hessian,com.jtunisie.osgi.hessian.cl
+ ient.test,org.osgi.framework,org.osgi.util.tracker
+Bundle-SymbolicName: com.jtunisie.osgi.hessian.client.test
+
