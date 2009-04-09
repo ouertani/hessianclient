@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Export-Package: com.caucho.hessian.security;uses:="com.caucho.hessian.
+ io,javax.crypto",com.caucho.hessian.io;uses:="org.w3c.dom,com.caucho.
+ hessian.util",com.caucho.hessian.client;uses:="com.caucho.hessian,com
+ .caucho.hessian.io,javax.naming,javax.naming.spi",com.caucho.hessian.
+ server;uses:="javax.servlet,com.caucho.hessian.io,javax.servlet.http"
+ ,com.caucho.hessian.jmx;uses:="com.caucho.hessian.io,javax.management
+ ",com.caucho.hessian.mux,com.caucho.hessian.util,com.caucho.hessian.m
+ icro,com.caucho.hessian,com.caucho.hessian.test
+Private-Package: com.jtunisie.osgi.hessian.extender,com.caucho.service
+ s.server,com.caucho.services.name,com.caucho.burlap.io,com.caucho.ser
+ vices.client,com.caucho.services.message,com.caucho.burlap.server,com
+ .caucho.burlap.client
+Built-By: slim
+Tool: Bnd-0.0.311
+Bundle-Name: hessian.extender
+Created-By: Apache Maven Bundle Plugin
+Bundle-Version: 1.0.0.SNAPSHOT
+Build-Jdk: 1.6.0_12
+Bnd-LastModified: 1239089825382
+Bundle-ManifestVersion: 2
+Import-Package: com.caucho.hessian,com.caucho.hessian.client,com.cauch
+ o.hessian.io,com.caucho.hessian.jmx,com.caucho.hessian.micro,com.cauc
+ ho.hessian.mux,com.caucho.hessian.security,com.caucho.hessian.server,
+ com.caucho.hessian.test,com.caucho.hessian.util,javax.crypto,javax.ma
+ nagement,javax.naming,javax.naming.spi,javax.servlet,javax.servlet.ht
+ tp,org.osgi.framework,org.osgi.service.http,org.osgi.util.tracker,org
+ .w3c.dom
+Bundle-SymbolicName: com.jtunisie.hessian.extender
+

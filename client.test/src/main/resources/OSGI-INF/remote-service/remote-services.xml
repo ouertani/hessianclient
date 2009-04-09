@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<service-descriptions xmlns="http://www.osgi.org/xmlns/sd/v1.0.0">
+  <service-description>
+    <provide interface="com.jtunisie.osgi.hessian.IService" />
+    <property name="osgi.remote.interfaces">*</property>
+    <property name="osgi.remote.configuration.type">pojo</property>
+    <property name="osgi.remote.configuration.pojo.address">http://localhost:8082/jtunisie</property>
+  </service-description>
+</service-descriptions>
