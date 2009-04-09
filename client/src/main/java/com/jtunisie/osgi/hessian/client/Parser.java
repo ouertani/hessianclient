@@ -8,6 +8,8 @@ package com.jtunisie.osgi.hessian.client;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -18,6 +20,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.XMLEvent;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  *
@@ -25,14 +28,17 @@ import javax.xml.stream.events.XMLEvent;
  */
 public class Parser {
 
+    public static List<Pair> parseRemoteconfig(URL url) {
 
-    public List<Pair> parseRemoteconfig(){
-          // Create event reader
-        FileReader reader = null;
+       
+        // Create event reader
+        InputStream openStream = null;
         try {
             XMLInputFactory factory = XMLInputFactory.newInstance();
-            reader = new FileReader("/home/slim/svn/2main/hessianextender-read-only/client.test/src/main/resources/OSGI-INF/remote-service/remote-services.xml");
-            XMLEventReader eventReader = factory.createXMLEventReader(reader);
+            // Setup a new eventReader
+            openStream = url.openStream();
+
+            XMLEventReader eventReader = factory.createXMLEventReader(openStream);
             QName name = new QName("name");
             QName iname = new QName("interface");
             List<Pair> remotes = null;
@@ -77,94 +83,26 @@ public class Parser {
                     }
                 }
             }
-        } catch (XMLStreamException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
-        } catch (FileNotFoundException ex) {
+        } catch (XMLStreamException ex) {
             ex.printStackTrace();
         } finally {
             try {
-                reader.close();
+                openStream.close();
             } catch (IOException ex) {
-                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
             }
         }
-        throw  new RuntimeException("Parse Exception");
+        throw new RuntimeException("Parse Exception");
     }
 
-    public static void main(String[] args) {
-        // Create event reader
-        FileReader reader = null;
-        try {
-            XMLInputFactory factory = XMLInputFactory.newInstance();
-            reader = new FileReader("/home/slim/svn/2main/hessianextender-read-only/client.test/src/main/resources/OSGI-INF/remote-service/remote-services.xml");
-            XMLEventReader eventReader = factory.createXMLEventReader(reader);
-            QName name = new QName("name");
-            QName iname = new QName("interface");
-            List<Pair> remotes = null;
-            String remotInterface = "";
-            String remoteAdress = "";
+    public static class Pair {
 
-            while (eventReader.hasNext()) {
-                XMLEvent event = eventReader.nextEvent();
-
-
-
-                if (event.isStartElement()) {
-
-                    if (event.asStartElement().getName().getLocalPart().equals("service-descriptions")) {
-                        remotes = new ArrayList<Pair>();
-                    }
-                    if (event.asStartElement().getName().getLocalPart().equals("service-description")) {
-                    }
-                    if (event.asStartElement().getName().getLocalPart().equals("provide")) {
-                        Attribute attributeByName = event.asStartElement().getAttributeByName(iname);
-                        if (attributeByName != null) {
-                            remotInterface = attributeByName.getValue();
-                        }
-                    }
-                    if (event.asStartElement().getName().getLocalPart().equals("property")) {
-
-                        Attribute attributeByName = event.asStartElement().getAttributeByName(name);
-                        if (attributeByName != null && attributeByName.getValue().equals("osgi.remote.configuration.pojo.address")) {
-                            remoteAdress = eventReader.nextEvent().asCharacters().getData();
-                        }
-                    }
-
-
-                }
-                if (event.isEndElement()) {
-                    if (event.asEndElement().getName().getLocalPart().equals("service-descriptions")) {
-                        for (Pair pair : remotes) {
-                            System.out.println("---");
-                            System.out.println("" + pair.getRemoteInterface() + "---" + pair.getRemoteAdress());
-                        }
-                        System.out.println("END");
-                        return;
-                    }
-                    if (event.asEndElement().getName().getLocalPart().equals("service-description")) {
-                        Pair p = Pair.getInstence(remotInterface, remoteAdress);
-                        remotes.add(p);
-                    }
-                }
-            }
-        } catch (XMLStreamException ex) {
-            ex.printStackTrace();
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-        } finally {
-            try {
-                reader.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-
-    static class Pair {
-
-        String remoteInterface;
-        String remoteAdress;
-        Class<?> clazz;
+        private String remoteInterface;
+        private String remoteAdress;
+        private Class<?> clazz;
+        private ServiceRegistration serviceRegistration;
 
         static Pair getInstence(String remotInterface, String remoteAdress) {
             try {
@@ -178,7 +116,7 @@ public class Parser {
         private Pair(String remotInterface, String remoteAdress) throws ClassNotFoundException {
             this.remoteInterface = remotInterface;
             this.remoteAdress = remoteAdress;
-//            this.clazz = Class.forName(remotInterface);
+            this.clazz = Class.forName(remotInterface);
         }
 
         public Class<?> getClazz() {
@@ -191,6 +129,15 @@ public class Parser {
 
         public String getRemoteAdress() {
             return remoteAdress;
+        }
+
+        public ServiceRegistration getServiceRegistration() {
+            System.out.println("Service registred !!");
+            return serviceRegistration;
+        }
+
+        public void setServiceRegistration(ServiceRegistration serviceRegistration) {
+            this.serviceRegistration = serviceRegistration;
         }
     }
 }

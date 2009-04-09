@@ -6,6 +6,7 @@
 package com.jtunisie.osgi.hessian.client;
 
 import com.caucho.hessian.client.HessianProxyFactory;
+import com.jtunisie.osgi.hessian.client.Parser.Pair;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -14,28 +15,18 @@ import java.lang.reflect.Method;
  *
  * @author slim
  */
-public class GenericClientProxy implements InvocationHandler,Serializable {
+public class GenericClientProxy implements InvocationHandler, Serializable {
 
-    String _interface;
-    String _address;
-     Class clazz;
+    private Pair pair;
 
-    public GenericClientProxy(String _interface, String _address) throws ClassNotFoundException {
-        this._interface = _interface;
-        this._address = _address;
-        this.clazz=Class.forName(_interface);
-        System.out.println("Clazz "+clazz);
+    public GenericClientProxy(Pair pair) throws ClassNotFoundException {
+        this.pair = pair;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        System.out.println("Generic Logger Entry: Invoking " +
-                method.getName());
-
         HessianProxyFactory factory = new HessianProxyFactory();
-
-        Serializable service = (Serializable) factory.create(clazz, _address);
-
+        Serializable service = (Serializable) factory.create(pair.getClazz(), pair.getRemoteAdress());
         return method.invoke(service, args);
     }
 }
