@@ -1,0 +1,1 @@
+Hessian client extender with dynamic proxy.
